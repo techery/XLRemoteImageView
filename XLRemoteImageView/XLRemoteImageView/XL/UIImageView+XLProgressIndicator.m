@@ -80,6 +80,19 @@ static char kXLImageProgressIndicatorKey;
                        imageDidAppearBlock:(void (^)(UIImageView *))imageDidAppearBlock
               progressIndicatorCenterPoint:(CGPoint)indicatorCenter
 {
+    __typeof__(self) __weak weakSelf = self;
+    
+    [self setImageWithProgressIndicatorAndURL:url placeholderImage:placeholderImage imageDidAppearBlock:imageDidAppearBlock failureBlock:^(NSError *error) {
+        [weakSelf.xl_progressIndicatorView setProgressValue:0.0f];
+    } progressIndicatorCenterPoint:indicatorCenter];
+}
+
+-(void)setImageWithProgressIndicatorAndURL:(NSURL *)url
+                          placeholderImage:(UIImage *)placeholderImage
+                       imageDidAppearBlock:(void (^)(UIImageView *))imageDidAppearBlock
+                              failureBlock:(void (^)(NSError *error))failureBlock
+              progressIndicatorCenterPoint:(CGPoint)indicatorCenter
+{
     [self setImage:nil];
     [self.xl_progressIndicatorView setProgressValue:0.0f];
     if (![self.xl_progressIndicatorView superview]){
@@ -99,7 +112,9 @@ static char kXLImageProgressIndicatorKey;
                              }
                          }
                          failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
-                             [weakSelf.xl_progressIndicatorView setProgressValue:0.0f];
+                             if (failureBlock) {
+                                 failureBlock(error);
+                             }
                          }
            downloadProgressBlock:^(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead) {
                float newValue = ((float)totalBytesRead / totalBytesExpectedToRead);
